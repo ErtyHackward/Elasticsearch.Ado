@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Elasticsearch.Ado</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>Vladislav Pozdnyakov</Authors>
+    <Description>Ado.Net wrapper for Elastic Search</Description>
+    <Copyright>Vladislav Pozdnyakov (c) 2020</Copyright>
+    <PackageId>ElasticsearchAdo</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/ErtyHackward/Elasticsearch.Ado</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ErtyHackward/Elasticsearch.Ado</RepositoryUrl>
+    <RepositoryType>github</RepositoryType>
+    <PackageTags>dotnet, elasticsearch, ado.net</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.Data.Common" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

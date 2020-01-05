@@ -1,6 +1,7 @@
 using Elasticsearch.Ado;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Data;
 using System.Diagnostics;
 
 namespace ElasticSearch.Ado.Tests
@@ -8,7 +9,7 @@ namespace ElasticSearch.Ado.Tests
     [TestClass]
     public class UnitTest1
     {
-        public string ConnectionString = "<write you connection string here>"; // example "Server=localhost;Port=9200;User=guest;Password=guest;"
+        public string ConnectionString = "<write_your_connection_string_here>"; // example "Server=localhost;Port=9200;User=guest;Password=guest;FetchSize=100000"
 
         public UnitTest1()
         {
@@ -47,8 +48,7 @@ namespace ElasticSearch.Ado.Tests
 
             Assert.AreEqual(10, linesRead);
         }
-
-
+        
         [TestMethod]
         public void TestFieldsMapping()
         {
@@ -89,23 +89,44 @@ namespace ElasticSearch.Ado.Tests
 
             Trace.WriteLine("Results:");
             int linesRead = 0;
+
+            Assert.ThrowsException<DataException>(() =>
+            {
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var boolField = reader.IsDBNull(0) ? "null" : reader.GetBoolean(0).ToString();
+                        var dtField = reader.IsDBNull(1) ? "null" : reader.GetDateTime(1).ToString();
+                        var longField = reader.IsDBNull(2) ? "null" : reader.GetInt64(2).ToString();
+
+                        Trace.WriteLine($"{boolField}, {dtField}, {longField}");
+                        linesRead++;
+                    }
+                }
+            });
+        }
+
+        [TestMethod]
+        public void TestPaginatedQuery()
+        {
+            var connection = new ElasticSearchConnection();
+            connection.ConnectionString = ConnectionString;
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT real_ip FROM \"logstash-stats-apps-*\" WHERE \"@timestamp\" > NOW() - INTERVAL 7 DAYS GROUP BY real_ip";
+
+            int linesRead = 0;
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    var boolField = reader.IsDBNull(0) ? "null" : reader.GetBoolean(0).ToString();
-                    var dtField = reader.IsDBNull(1) ? "null" : reader.GetDateTime(1).ToString();
-                    var longField = reader.IsDBNull(2) ? "null" : reader.GetInt64(2).ToString();
-
-                    Trace.WriteLine($"{boolField}, {dtField}, {longField}");
                     linesRead++;
                 }
             }
-
-            Assert.AreEqual(10, linesRead);
+            Trace.WriteLine($"Lines read: {linesRead}");
+            Assert.IsTrue(linesRead > 1000);
         }
-
-        //
-
     }
 }

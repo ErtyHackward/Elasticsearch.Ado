@@ -15,7 +15,7 @@ Use in your code:
 using Elasticsearch.Ado;
 ...
 var connection = new ElasticSearchConnection();
-connection.ConnectionString = "Server=localhost;Port=9200;User=guest;Password=guest;";
+connection.ConnectionString = "Server=localhost;Port=9200;User=guest;Password=guest;FetchSize=100000";
 connection.Open();
 
 var command = connection.CreateCommand();
@@ -38,7 +38,7 @@ using (var reader = command.ExecuteReader())
 
 * Elastic Search 6.3+
 * Read-only access 
-* Limited SQL functionality. Please read [An Introduction to Elasticsearch SQL with Practical Examples](https://www.elastic.co/blog/an-introduction-to-elasticsearch-sql-with-practical-examples-part-1)
+* Limited SQL functionality. No DISTINCT support yet. Please read [An Introduction to Elasticsearch SQL with Practical Examples](https://www.elastic.co/blog/an-introduction-to-elasticsearch-sql-with-practical-examples-part-1)
 
 ## Extending and deriving
 If you've fixed some bugs or wrote some useful addition to this driver, please, do pull request them back here. 

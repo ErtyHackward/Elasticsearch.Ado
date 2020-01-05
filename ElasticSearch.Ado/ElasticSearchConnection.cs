@@ -10,10 +10,10 @@ namespace Elasticsearch.Ado
     public class ElasticSearchConnection : IDbConnection
     {
         private string _connectionString;
-        private ElasticSearchConnectionString _connString;
+        internal ElasticSearchConnectionString _connString;
 
         /// <summary>
-        /// Example: "Server=127.0.0.1;Port=9200;User=admin;Password=123456;"
+        /// Example: "Server=127.0.0.1;Port=9200;User=admin;Password=123456;FetchSize=100000"
         /// </summary>
         public string ConnectionString
         {
@@ -36,8 +36,7 @@ namespace Elasticsearch.Ado
         public string Database => null;
 
         public ConnectionState State { get; private set; } = ConnectionState.Closed;
-
-
+        
         /// <summary>
         /// Throws NotSupportedException
         /// </summary>

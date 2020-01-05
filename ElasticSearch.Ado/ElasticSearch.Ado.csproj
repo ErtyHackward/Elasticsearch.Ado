@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Elasticsearch.Ado</RootNamespace>
-    <Version>0.1.1</Version>
+    <Version>0.1.3</Version>
     <Authors>Vladislav Pozdnyakov</Authors>
     <Description>Ado.Net wrapper for Elastic Search</Description>
     <Copyright>Vladislav Pozdnyakov (c) 2020</Copyright>
@@ -14,7 +14,7 @@
     <RepositoryType>github</RepositoryType>
     <PackageTags>dotnet, elasticsearch, ado.net</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReleaseNotes>Passing elasticsearch errors</PackageReleaseNotes>
+    <PackageReleaseNotes>Paginated output support added, FetchSize connection string parameter introduced</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

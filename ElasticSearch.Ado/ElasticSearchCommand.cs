@@ -7,6 +7,7 @@ namespace Elasticsearch.Ado
     public class ElasticSearchCommand : IDbCommand
     {
         internal HttpClient _httpClient;
+        internal ElasticSearchConnection _connection;
 
         public string CommandText { get; set; }
 
@@ -17,7 +18,7 @@ namespace Elasticsearch.Ado
 
         public CommandType CommandType { get; set; }
 
-        public IDbConnection Connection { get; set; }
+        public IDbConnection Connection { get => _connection; set => _connection = (ElasticSearchConnection)value; }
 
         public ElasticSearchParameterCollection Parameters { get; } = new ElasticSearchParameterCollection();
 
@@ -29,10 +30,10 @@ namespace Elasticsearch.Ado
         
         public ElasticSearchCommand(ElasticSearchConnection connection, string commandText = null)
         {
-            Connection = connection;
+            _connection = connection;
             CommandText = commandText;
 
-            _httpClient = connection.CreateClient();
+            _httpClient = _connection.CreateClient();
 
         }
 

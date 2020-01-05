@@ -10,6 +10,8 @@
 
         public int Port { get; set; }
 
+        public int FetchSize { get; set; }
+
         public static ElasticSearchConnectionString Parse(string connectionString)
         {
             // "Server=127.0.0.1;Port=9200;User=admin;Password=123456;"
@@ -18,6 +20,7 @@
 
             str.Server = "127.0.0.1";
             str.Port = 9200;
+            str.FetchSize = 1000;
 
             var spl = connectionString.Split(';');
 
@@ -36,6 +39,7 @@
                     case "port": str.Port = int.Parse(value); break;
                     case "user": str.User = value; break;
                     case "password": str.Password = value; break;
+                    case "fetchsize": str.FetchSize = int.Parse(value); break;
                     default: break;
                 }
             }

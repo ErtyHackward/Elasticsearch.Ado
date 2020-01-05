@@ -13,6 +13,7 @@ namespace Elasticsearch.Ado
     {
         private ElasticSearchCommand _command;
         private ElasticSearchResponse _response;
+        private List<ElasticColumn> _columns;
         private int _line = -1;
         private ManualResetEvent _sync = new ManualResetEvent(false);
 
@@ -24,17 +25,23 @@ namespace Elasticsearch.Ado
 
         public bool IsClosed => _response == null;
 
-        public int RecordsAffected => 0;
+        public int RecordsAffected { get; private set;}
 
-        public int FieldCount => _response == null ? 0 : _response.Columns.Count;
+        public int FieldCount => _columns == null ? 0 : _columns.Count;
 
         internal ElasticSearchReader(ElasticSearchCommand command)
         {
             _command = command;
-            MakeQuery();
+            MakeNextQuery();
+
+            _sync.WaitOne();
+
+            if (_response.Error != null)
+                throw new DataException($"ElasticSearch request error: {_response.Error.Type} {_response.Error.Reason} {_response.Error.Unroll()}");
+
         }
 
-        internal async void MakeQuery()
+        internal async void MakeNextQuery(string cursor = null)
         {
             _sync.Reset();
             _response = null;
@@ -43,12 +50,24 @@ namespace Elasticsearch.Ado
             try
             {
                 var escapedCommand = _command.CommandText.Replace("\"", "\\\"");
-                var response = await _command._httpClient.PostAsync("", new StringContent($"{{ \"query\": \"{escapedCommand}\" }}", Encoding.UTF8, "application/json")).ConfigureAwait(false);
+
+                StringContent content;
+
+                if (cursor == null)
+                    content = new StringContent($"{{ \"query\": \"{escapedCommand}\", \"fetch_size\": {_command._connection._connString.FetchSize} }}", Encoding.UTF8, "application/json");
+                else
+                    content = new StringContent($"{{ \"cursor\": \"{cursor}\" }}", Encoding.UTF8, "application/json");
+
+                var response = await _command._httpClient.PostAsync("", content).ConfigureAwait(false);
 
                 using (response)
                 {
                     var responseString = await response.Content.ReadAsStringAsync();
                     _response = JsonConvert.DeserializeObject<ElasticSearchResponse>(responseString);
+
+                    if (_response.Columns != null)
+                        _columns = _response.Columns;
+
                 }
             }
             catch (Exception x)
@@ -105,7 +124,7 @@ namespace Elasticsearch.Ado
 
         public string GetDataTypeName(int i)
         {
-            return _response.Columns[i].Type;
+            return _columns[i].Type;
         }
 
         public DateTime GetDateTime(int i)
@@ -125,7 +144,7 @@ namespace Elasticsearch.Ado
 
         public Type GetFieldType(int i)
         {
-            switch (_response.Columns[i].Type)
+            switch (_columns[i].Type)
             {
                 case "boolean": return typeof(bool);
                 case "integer": return typeof(int);
@@ -172,12 +191,12 @@ namespace Elasticsearch.Ado
 
         public string GetName(int i)
         {
-            return _response?.Columns[i].Name;
+            return _columns[i].Name;
         }
 
         public int GetOrdinal(string name)
         {
-            return _response.Columns.FindIndex(c => c.Name == name);
+            return _columns.FindIndex(c => c.Name == name);
         }
 
         public DataTable GetSchemaTable()
@@ -197,7 +216,7 @@ namespace Elasticsearch.Ado
 
         public int GetValues(object[] values)
         {
-            var count = Math.Min(_response.Columns.Count, values.Length);
+            var count = Math.Min(_columns.Count, values.Length);
             for (int i = 0; i < count; i++)
             {
                 values[i] = GetValue(i);
@@ -222,7 +241,16 @@ namespace Elasticsearch.Ado
             if (_response.Error != null)
                 throw new DataException($"ElasticSearch request error: {_response.Error.Type} {_response.Error.Reason} {_response.Error.Unroll()}");
 
-            return _response?.Rows.Count > ++_line;
+            _line++;
+
+            if (_response.Rows.Count == _line && !string.IsNullOrEmpty(_response.Cursor))
+            {
+                MakeNextQuery(_response.Cursor);
+                _sync.WaitOne();
+                _line++;
+            }
+
+            return _response?.Rows.Count > _line;
         }
     }
 
@@ -233,6 +261,9 @@ namespace Elasticsearch.Ado
 
         [JsonProperty("rows")]
         public List<List<object>> Rows { get; set; }
+
+        [JsonProperty("cursor")]
+        public string Cursor { get; set; }
 
         [JsonProperty("status")]
         public int Status { get; set; }

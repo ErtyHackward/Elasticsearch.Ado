@@ -39,7 +39,7 @@ using (var reader = command.ExecuteReader())
 * Elastic Search 6.3+
 * Read-only access 
 * Limited SQL functionality. No DISTINCT support yet. Please read [An Introduction to Elasticsearch SQL with Practical Examples](https://www.elastic.co/blog/an-introduction-to-elasticsearch-sql-with-practical-examples-part-1)
-
+* [X-Pack SQL Limitations](https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-limitations.html)
 ## Extending and deriving
 If you've fixed some bugs or wrote some useful addition to this driver, please, do pull request them back here. 
 

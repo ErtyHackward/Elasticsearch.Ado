@@ -77,5 +77,35 @@ namespace ElasticSearch.Ado.Tests
             Assert.AreEqual(10, linesRead);
         }
 
+        [TestMethod]
+        public void TestFailQuery()
+        {
+            var connection = new ElasticSearchConnection();
+            connection.ConnectionString = ConnectionString;
+            connection.Open();
+
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT DISTINCT real_ip FROM \"logstash-stats-apps-*\" WHERE \"@timestamp\" > NOW() - INTERVAL 7 DAYS";
+
+            Trace.WriteLine("Results:");
+            int linesRead = 0;
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var boolField = reader.IsDBNull(0) ? "null" : reader.GetBoolean(0).ToString();
+                    var dtField = reader.IsDBNull(1) ? "null" : reader.GetDateTime(1).ToString();
+                    var longField = reader.IsDBNull(2) ? "null" : reader.GetInt64(2).ToString();
+
+                    Trace.WriteLine($"{boolField}, {dtField}, {longField}");
+                    linesRead++;
+                }
+            }
+
+            Assert.AreEqual(10, linesRead);
+        }
+
+        //
+
     }
 }

@@ -47,7 +47,8 @@ namespace Elasticsearch.Ado
 
                 using (response)
                 {
-                    _response = JsonConvert.DeserializeObject<ElasticSearchResponse>(await response.Content.ReadAsStringAsync());
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    _response = JsonConvert.DeserializeObject<ElasticSearchResponse>(responseString);
                 }
             }
             catch (Exception x)
@@ -217,6 +218,10 @@ namespace Elasticsearch.Ado
         public bool Read()
         {
             _sync.WaitOne();
+
+            if (_response.Error != null)
+                throw new DataException($"ElasticSearch request error: {_response.Error.Type} {_response.Error.Reason} {_response.Error.Unroll()}");
+
             return _response?.Rows.Count > ++_line;
         }
     }
@@ -228,6 +233,12 @@ namespace Elasticsearch.Ado
 
         [JsonProperty("rows")]
         public List<List<object>> Rows { get; set; }
+
+        [JsonProperty("status")]
+        public int Status { get; set; }
+
+        [JsonProperty("error")]
+        public ElasticError Error { get; set; }
     }
 
     public class ElasticColumn
@@ -237,5 +248,34 @@ namespace Elasticsearch.Ado
 
         [JsonProperty("type")]
         public string Type { get; set; }
+    }
+
+    public class ElasticError
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; }
+        [JsonProperty("reason")]
+        public string Reason { get; set; }
+        [JsonProperty("root_cause")]
+        public List<ElasticError> RootCause { get; set; }
+
+        public string Unroll()
+        {
+            if (RootCause?.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var item in RootCause)
+                {
+                    sb.Append(item.Type);
+                    sb.Append(": ");
+                    sb.Append(item.Reason);
+                    sb.AppendLine();
+                }
+
+                return sb.ToString();
+            }
+            return string.Empty;
+        }
     }
 }
